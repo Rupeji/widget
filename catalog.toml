@@ -1,0 +1,8 @@
+[[plugin]]
+id         = "inhumano/audio-molon"
+name       = "Audio Molon"
+version    = "1.0.0"
+author     = "inhumano"
+license    = "MIT"
+description = "Visualizador de audio basado en CAVA para Noctalia"
+plugin_api = 30
