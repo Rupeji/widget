@@ -1,20 +1,86 @@
-id         = "inhumano/audio-molon"
-name       = "Audio Molon"
-version    = "1.0.0"
-plugin_api = 30
-author     = "inhumano"
+schema_version = 1
+id = "audio-molon"
+name = "Audio Molon"
+version = "0.1.0"
+author = "Rupeji"
+description = "Visualizador de audio con CAVA estilo cápsula"
+plugin_api = 56
 
-# Servicio que ejecuta CAVA en segundo plano
-[[service]]
-id    = "cava-runner"
-entry = "service.luau"
+[entries.service]
+script = "service.luau"
+autostart = true
 
-# Widget de barra (el que ya tienes)
-[[widget]]
-id    = "audio-molon"
-entry = "widget.luau"
+[entries.bar]
+script = "bar.luau"
 
-# NUEVO: Widget de escritorio
-[[desktop_widget]]
-id    = "audio-molon-desktop"
-entry = "desktop.luau"
+[entries.card]
+script = "card.luau"
+
+# --- Ajustes configurables desde Noctalia ---
+[settings.bars]
+type = "int"
+default = 24
+min = 8
+max = 64
+label = "Número de barras"
+
+[settings.bar_width]
+type = "int"
+default = 3
+min = 1
+max = 12
+label = "Grosor de barra (px)"
+
+[settings.bar_gap]
+type = "int"
+default = 2
+min = 0
+max = 10
+label = "Separación entre barras (px)"
+
+[settings.bar_radius]
+type = "int"
+default = 2
+min = 0
+max = 8
+label = "Redondeo de barras (px)"
+
+[settings.height]
+type = "int"
+default = 28
+min = 16
+max = 80
+label = "Alto de la cápsula (px)"
+
+[settings.padding_x]
+type = "int"
+default = 8
+min = 0
+max = 24
+label = "Margen horizontal interno (px)"
+
+[settings.padding_y]
+type = "int"
+default = 5
+min = 0
+max = 20
+label = "Margen vertical interno (px)"
+
+[settings.gravity]
+type = "int"
+default = 200
+min = 50
+max = 500
+label = "Gravedad de caída (CAVA)"
+
+[settings.sensitivity]
+type = "int"
+default = 100
+min = 20
+max = 300
+label = "Sensibilidad (%)"
+
+[settings.monstercat]
+type = "bool"
+default = true
+label = "Suavizado Monstercat"
