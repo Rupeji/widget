@@ -1,10 +1,12 @@
 schema_version = 1
-id = "audio-molon"
+id = "rupeji/audio-molon"
 name = "Audio Molon"
 version = "0.1.0"
-author = "Rupeji"
+author = "rupeji"
+license = "MIT"
+icon = "activity"
 description = "Visualizador de audio con CAVA para el escritorio"
-plugin_api = 56
+plugin_api = 36
 
 [entries.service]
 script = "service.luau"
