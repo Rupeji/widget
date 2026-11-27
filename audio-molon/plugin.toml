@@ -3,20 +3,17 @@ id = "audio-molon"
 name = "Audio Molon"
 version = "0.1.0"
 author = "Rupeji"
-description = "Visualizador de audio con CAVA estilo cápsula"
+description = "Visualizador de audio con CAVA para el escritorio"
 plugin_api = 56
 
 [entries.service]
 script = "service.luau"
 autostart = true
 
-[entries.bar]
-script = "bar.luau"
-
 [entries.card]
-script = "card.luau"
+script = "desktop.luau"
 
-# --- Ajustes configurables desde Noctalia ---
+# --- Ajustes para clavar el estilo de tu foto ---
 [settings.bars]
 type = "int"
 default = 24
@@ -26,45 +23,52 @@ label = "Número de barras"
 
 [settings.bar_width]
 type = "int"
-default = 3
-min = 1
-max = 12
+default = 5
+min = 2
+max = 16
 label = "Grosor de barra (px)"
 
 [settings.bar_gap]
 type = "int"
-default = 2
-min = 0
-max = 10
+default = 4
+min = 1
+max = 12
 label = "Separación entre barras (px)"
 
 [settings.bar_radius]
 type = "int"
 default = 2
 min = 0
-max = 8
+max = 10
 label = "Redondeo de barras (px)"
 
 [settings.height]
 type = "int"
-default = 28
-min = 16
-max = 80
-label = "Alto de la cápsula (px)"
+default = 72
+min = 32
+max = 200
+label = "Alto del widget (px)"
 
 [settings.padding_x]
 type = "int"
-default = 8
-min = 0
-max = 24
-label = "Margen horizontal interno (px)"
+default = 14
+min = 4
+max = 40
+label = "Margen horizontal (px)"
 
 [settings.padding_y]
 type = "int"
-default = 5
+default = 10
+min = 4
+max = 30
+label = "Margen vertical (px)"
+
+[settings.card_radius]
+type = "int"
+default = 12
 min = 0
-max = 20
-label = "Margen vertical interno (px)"
+max = 30
+label = "Redondeo de la cápsula (px)"
 
 [settings.gravity]
 type = "int"
