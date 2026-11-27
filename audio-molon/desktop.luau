@@ -1,21 +1,41 @@
--- desktop.luau
-function draw()
-    noctalia.setUpdateInterval(33) -- ~30 FPS
+function render_ui()
+    local s = noctalia.settings.get()
+    local levels = noctalia.state.get("levels") or {}
+    local num_bars = s.bars or 24
+    local bar_w = s.bar_width or 5
+    local gap = s.bar_gap or 4
+    local radius = s.bar_radius or 2
+    local total_h = s.height or 72
+    local pad_x = s.padding_x or 14
+    local pad_y = s.padding_y or 10
+    local card_r = s.card_radius or 12
+    local inner_h = math.max(12, total_h - (pad_y * 2))
 
-    local bars = noctalia.state.get("audio_bars")
-    if not bars or #bars == 0 then
-        ui.text({ text = "♪", size = 48, color = "#ffffff" })
-        return
+    local children = {}
+    for i = 1, num_bars do
+        local lvl = levels[i] or 0.05
+        local h = math.max(3, math.floor(inner_h * lvl))
+        table.insert(children, ui.box({
+            width = bar_w,
+            height = h,
+            background = "primary",
+            borderRadius = radius,
+        }))
     end
 
-    -- Simular barras grandes con texto espaciado
-    local block_chars = { " ", "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█" }
-    local display = ""
-    for i = 1, #bars do
-        local level = math.max(1, math.floor((bars[i] / 100) * 8) + 1)
-        if level > 8 then level = 8 end
-        display = display .. block_chars[level] .. " " -- Espacio entre barras
-    end
-
-    ui.text({ text = display, size = 32, color = "#ffaa00" })
+    return ui.box({
+        height = total_h,
+        paddingLeft = pad_x,
+        paddingRight = pad_x,
+        paddingTop = pad_y,
+        paddingBottom = pad_y,
+        background = "surfaceContainerHigh",
+        borderRadius = card_r,
+        ui.row({
+            spacing = gap,
+            align = "end",
+            height = inner_h,
+            table.unpack(children)
+        })
+    })
 end
