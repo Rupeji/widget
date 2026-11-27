@@ -1,6 +1,5 @@
 local CONFIG_PATH = "/tmp/noctalia-audio-molon.ini"
 local proc = nil
-local current_bars = 0
 
 local function build_config(settings)
     local bars = settings.bars or 24
@@ -38,7 +37,6 @@ local function restart_cava(settings)
         f:close()
     end
 
-    current_bars = settings.bars or 24
     proc = noctalia.process.spawn({ "cava", "-p", CONFIG_PATH }, {
         on_stdout = function(line)
             local values = {}
