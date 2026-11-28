@@ -1,6 +1,8 @@
 {
   "setting_width": "Ancho total (px)",
-  "setting_height": "Alto máximo (px)",
+  "setting_bar_height": "Alto de las barras (px)",
+  "setting_canvas_height": "Altura del lienzo fijo (px)",
+  "setting_grow_upwards": "Crecer hacia arriba (anclado abajo)",
   "setting_bar_width": "Grosor de barra (px)",
   "setting_bar_gap": "Separación entre barras (px)",
   "setting_sensitivity": "Sensibilidad (%)",
