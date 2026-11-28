@@ -1,7 +1,7 @@
 {
-  "setting_width": "Width (px)",
-  "setting_height": "Height (px)",
-  "setting_bars": "Number of bars",
+  "setting_width": "Total width (px)",
+  "setting_height": "Max height (px)",
+  "setting_bar_width": "Bar thickness (px)",
   "setting_bar_gap": "Bar gap (px)",
   "setting_sensitivity": "Sensitivity (%)",
   "setting_color": "Color (primary, secondary or #RRGGBB)",
