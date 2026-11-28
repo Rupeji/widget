@@ -12,18 +12,34 @@ name = "Audio Molon"
 entry = "desktop.luau"
 
 [[setting]]
+key = "width"
+type = "number"
+label_key = "setting_width"
+default = 1920
+min = 200
+max = 3840
+
+[[setting]]
+key = "height"
+type = "number"
+label_key = "setting_height"
+default = 140
+min = 30
+max = 600
+
+[[setting]]
 key = "bars"
 type = "number"
 label_key = "setting_bars"
-default = 48
+default = 160
 min = 8
-max = 160
+max = 256
 
 [[setting]]
 key = "bar_gap"
 type = "number"
 label_key = "setting_bar_gap"
-default = 4
+default = 2
 min = 1
 max = 20
 
