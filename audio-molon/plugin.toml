@@ -4,7 +4,7 @@ version = "1.0.0"
 author = "rupeji"
 license = "MIT"
 description = "Visualizador de espectro de audio en el escritorio impulsado por CAVA"
-plugin_api = 36
+plugin_api = 51
 
 [[desktop_widget]]
 id = "audio-molon"
@@ -12,20 +12,20 @@ name = "Audio Molon"
 entry = "desktop.luau"
 
 [[setting]]
-key = "widget_width"
+key = "bars"
 type = "number"
-label_key = "setting_widget_width"
-default = 600
-min = 120
-max = 3840
+label_key = "setting_bars"
+default = 48
+min = 8
+max = 160
 
 [[setting]]
-key = "max_height"
+key = "bar_gap"
 type = "number"
-label_key = "setting_max_height"
-default = 140
-min = 30
-max = 600
+label_key = "setting_bar_gap"
+default = 4
+min = 1
+max = 20
 
 [[setting]]
 key = "sensitivity"
@@ -40,3 +40,9 @@ key = "color"
 type = "string"
 label_key = "setting_color"
 default = "primary"
+
+[[setting]]
+key = "hide_when_idle"
+type = "boolean"
+label_key = "setting_hide_when_idle"
+default = true
