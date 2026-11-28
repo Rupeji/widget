@@ -10,8 +10,8 @@ local MIN_HEIGHT = 4
 
 -- ── Estado interno ───────────────────────────────────────────────────────────
 local rawBands: { number } = table.create(CAVA_BANDS, 0)
-local dynamicW: number? = nil
-local dynamicH: number? = nil
+local hookW: number? = nil
+local hookH: number? = nil
 
 -- Interpola las 64 bandas de CAVA a cualquier número de barras visibles
 local function sampleBand(index: number, totalVisible: number): number
@@ -29,9 +29,13 @@ local function sampleBand(index: number, totalVisible: number): number
 end
 
 local function buildUi(): UiNode
-	-- Intentamos leer propiedades dinámicas por si la API 36 las expone
-	local dw = dynamicW or (type(desktopWidget.width) == "number" and desktopWidget.width > 20 and desktopWidget.width) or cfgWidth
-	local dh = dynamicH or (type(desktopWidget.height) == "number" and desktopWidget.height > 20 and desktopWidget.height) or cfgHeight
+	-- Leemos el tamaño actual del contenedor si Noctalia lo expone en desktopWidget
+	local dw = hookW
+		or (type(desktopWidget.width) == "number" and desktopWidget.width > 20 and desktopWidget.width)
+		or cfgWidth
+	local dh = hookH
+		or (type(desktopWidget.height) == "number" and desktopWidget.height > 20 and desktopWidget.height)
+		or cfgHeight
 
 	local usableW = math.max(40, dw - 16)
 	local usableH = math.max(24, dh - 16)
@@ -66,16 +70,20 @@ local function buildUi(): UiNode
 	}, children)
 end
 
--- Hooks posibles de redimensionado en Noctalia
+-- Captura cualquier variante de evento de redimensionado que emita Noctalia
 function onResize(w: number, h: number)
-	if w > 0 and h > 0 then
-		dynamicW = w
-		dynamicH = h
+	if w and h and w > 20 and h > 20 then
+		hookW = w
+		hookH = h
 		desktopWidget.render(buildUi())
 	end
 end
 
 function onSizeChanged(w: number, h: number)
+	onResize(w, h)
+end
+
+function onGeometryChanged(x: number, y: number, w: number, h: number)
 	onResize(w, h)
 end
 
