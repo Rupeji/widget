@@ -6,5 +6,5 @@ author = "rupeji"
 license = "MIT"
 icon = "activity"
 description = "Visualizador de audio CAVA para el escritorio"
-plugin_api = 36
+plugin_api = 51
 tags = ["audio", "visualizer"]
