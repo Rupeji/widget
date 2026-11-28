@@ -1,35 +1,37 @@
 --!strict
 
--- ── Constantes visuales ──────────────────────────────────────────────────────
-local BAR_WIDTH = 8
-local BAR_GAP = 4
-local MAX_HEIGHT = 120
+-- ── Constantes visuales fijas ────────────────────────────────────────────────
 local MIN_HEIGHT = 4
-local BAR_RADIUS = 4
 
 -- ── Estado local ─────────────────────────────────────────────────────────────
 local numBars = tonumber(noctalia.getConfig("bars")) or 24
 local bars: { number } = table.create(numBars, 0)
 
 local function buildUi(): UiNode
+	local barWidth = tonumber(noctalia.getConfig("bar_width")) or 8
+	local barGap = tonumber(noctalia.getConfig("bar_gap")) or 4
+	local maxHeight = tonumber(noctalia.getConfig("max_height")) or 120
 	local barColor = tostring(noctalia.getConfig("color") or "primary")
+	-- Redondeo proporcional al ancho de barra (máximo 4px)
+	local barRadius = math.min(4, math.floor(barWidth / 2))
+
 	local children: { UiNode } = {}
 
 	for i = 1, numBars do
 		local val = bars[i] or 0
-		local h = math.floor(MIN_HEIGHT + (val * (MAX_HEIGHT - MIN_HEIGHT)))
+		local h = math.floor(MIN_HEIGHT + (val * math.max(0, maxHeight - MIN_HEIGHT)))
 		table.insert(children, ui.box({
 			key = "bar_" .. tostring(i),
-			width = BAR_WIDTH,
+			width = barWidth,
 			height = h,
 			fill = barColor,
-			radius = BAR_RADIUS,
+			radius = barRadius,
 		}))
 	end
 
 	return ui.row({
-		height = MAX_HEIGHT,
-		gap = BAR_GAP,
+		height = maxHeight,
+		gap = barGap,
 		align = "end",
 		padding = 8,
 	}, children)
