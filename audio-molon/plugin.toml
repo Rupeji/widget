@@ -23,6 +23,30 @@ min = 8
 max = 64
 
 [[setting]]
+key = "bar_width"
+type = "number"
+label = "Ancho de barra (px)"
+default = 8
+min = 2
+max = 40
+
+[[setting]]
+key = "bar_gap"
+type = "number"
+label = "Separación entre barras (px)"
+default = 4
+min = 0
+max = 24
+
+[[setting]]
+key = "max_height"
+type = "number"
+label = "Altura máxima (px)"
+default = 120
+min = 30
+max = 500
+
+[[setting]]
 key = "sensitivity"
 type = "number"
 label = "Sensibilidad (%)"
