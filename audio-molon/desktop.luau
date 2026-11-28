@@ -4,7 +4,7 @@
 local numBars = tonumber(noctalia.getConfig("bars")) or 24
 local barWidth = tonumber(noctalia.getConfig("bar_width")) or 8
 local barGap = tonumber(noctalia.getConfig("bar_gap")) or 4
-local defaultMaxHeight = tonumber(noctalia.getConfig("max_height")) or 120
+local maxHeight = tonumber(noctalia.getConfig("max_height")) or 120
 local sensitivity = tonumber(noctalia.getConfig("sensitivity")) or 100
 local barColor = tostring(noctalia.getConfig("color") or "primary")
 local barRadius = math.min(4, math.floor(barWidth / 2))
@@ -13,28 +13,22 @@ local MIN_HEIGHT = 4
 local bars: { number } = table.create(numBars, 0)
 
 local function buildUi(): UiNode
-	-- Si el usuario redimensiona el widget en el escritorio, adaptamos la altura máxima
-	local w, h = desktopWidget.getSize()
-	local effectiveMaxHeight = (h and h > 24) and (h - 16) or defaultMaxHeight
-
 	local children: { UiNode } = {}
 	for i = 1, numBars do
 		local val = bars[i] or 0
-		local barH = math.floor(MIN_HEIGHT + (val * math.max(0, effectiveMaxHeight - MIN_HEIGHT)))
+		local h = math.floor(MIN_HEIGHT + (val * math.max(0, maxHeight - MIN_HEIGHT)))
 		table.insert(children, ui.box({
 			key = "bar_" .. tostring(i),
-			width = barWidth,
-			height = barH,
+			flex = 1, -- Hace que cada barra se reparta el ancho total del widget
+			height = h,
 			fill = barColor,
 			radius = barRadius,
 		}))
 	end
 
 	return ui.row({
-		width = "100%",
-		height = "100%",
+		height = maxHeight,
 		gap = barGap,
-		justify = "space-between", -- Distribuye las barras de punta a punta al estirar
 		align = "end",
 		padding = 8,
 	}, children)
