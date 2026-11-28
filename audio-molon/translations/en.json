@@ -1,6 +1,8 @@
 {
   "setting_width": "Total width (px)",
-  "setting_height": "Max height (px)",
+  "setting_bar_height": "Bar height (px)",
+  "setting_canvas_height": "Fixed canvas height (px)",
+  "setting_grow_upwards": "Grow upwards (anchored bottom)",
   "setting_bar_width": "Bar thickness (px)",
   "setting_bar_gap": "Bar gap (px)",
   "setting_sensitivity": "Sensitivity (%)",
