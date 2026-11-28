@@ -12,36 +12,20 @@ name = "Audio Molon"
 entry = "desktop.luau"
 
 [[setting]]
-key = "bars"
+key = "widget_width"
 type = "number"
-label_key = "setting_bars"
-default = 24
-min = 8
-max = 64
-
-[[setting]]
-key = "bar_width"
-type = "number"
-label_key = "setting_bar_width"
-default = 8
-min = 2
-max = 40
-
-[[setting]]
-key = "bar_gap"
-type = "number"
-label_key = "setting_bar_gap"
-default = 4
-min = 0
-max = 24
+label_key = "setting_widget_width"
+default = 600
+min = 120
+max = 3840
 
 [[setting]]
 key = "max_height"
 type = "number"
 label_key = "setting_max_height"
-default = 120
+default = 140
 min = 30
-max = 500
+max = 600
 
 [[setting]]
 key = "sensitivity"
@@ -50,20 +34,6 @@ label_key = "setting_sensitivity"
 default = 100
 min = 10
 max = 500
-
-[[setting]]
-key = "gravity"
-type = "number"
-label_key = "setting_gravity"
-default = 200
-min = 50
-max = 1000
-
-[[setting]]
-key = "monstercat"
-type = "boolean"
-label_key = "setting_monstercat"
-default = true
 
 [[setting]]
 key = "color"
