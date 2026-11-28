@@ -17,7 +17,7 @@ type = "number"
 label_key = "setting_width"
 default = 1920
 min = 200
-max = 3840
+max = 7680
 
 [[setting]]
 key = "height"
@@ -25,21 +25,21 @@ type = "number"
 label_key = "setting_height"
 default = 140
 min = 30
-max = 600
+max = 800
 
 [[setting]]
-key = "bars"
+key = "bar_width"
 type = "number"
-label_key = "setting_bars"
-default = 160
-min = 8
-max = 256
+label_key = "setting_bar_width"
+default = 6
+min = 2
+max = 40
 
 [[setting]]
 key = "bar_gap"
 type = "number"
 label_key = "setting_bar_gap"
-default = 2
+default = 3
 min = 1
 max = 20
 
