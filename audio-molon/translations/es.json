@@ -1,6 +1,6 @@
 {
-  "setting_widget_width": "Ancho total (px)",
-  "setting_max_height": "Altura máxima (px)",
-  "setting_sensitivity": "Sensibilidad (%)",
-  "setting_color": "Color (primary, secondary o #RRGGBB)"
+  "setting_widget_width": "Total width (px)",
+  "setting_max_height": "Max height (px)",
+  "setting_sensitivity": "Sensitivity (%)",
+  "setting_color": "Color (primary, secondary or #RRGGBB)"
 }
