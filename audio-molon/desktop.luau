@@ -4,14 +4,16 @@
 local SILENCE_FRAMES_THRESHOLD = 45 -- ~0.75 segundos a 60 FPS
 
 -- ── Estado interno ───────────────────────────────────────────────────────────
-local currentBarsCount = math.clamp(tonumber(noctalia.getConfig("bars")) or 48, 8, 256)
+local currentBarsCount = math.clamp(tonumber(noctalia.getConfig("bars")) or 160, 8, 256)
 local bars: { number } = table.create(currentBarsCount, 0)
 local silentFrames = 0
 local isVisible = true
 local configPath: string? = nil
 
 local function buildUi(): UiNode
-	local barGap = math.clamp(tonumber(noctalia.getConfig("bar_gap")) or 4, 1, 20)
+	local totalWidth = math.max(200, tonumber(noctalia.getConfig("width")) or 1920)
+	local totalHeight = math.max(30, tonumber(noctalia.getConfig("height")) or 140)
+	local barGap = math.clamp(tonumber(noctalia.getConfig("bar_gap")) or 2, 1, 20)
 	local barColor = tostring(noctalia.getConfig("color") or "primary")
 	local children: { UiNode } = {}
 
@@ -20,8 +22,6 @@ local function buildUi(): UiNode
 		table.insert(children, ui.column({
 			key = "col_" .. tostring(i),
 			flexGrow = 1,
-			minWidth = 1,
-			marginRight = (i < currentBarsCount) and barGap or 0,
 		}, {
 			ui.spacer({
 				flexGrow = math.max(0.001, 1 - val),
@@ -36,10 +36,9 @@ local function buildUi(): UiNode
 	end
 
 	return ui.row({
-		flexGrow = 1,
-		justify = "space-between",
-		minWidth = 320,
-		minHeight = 80,
+		width = totalWidth,
+		height = totalHeight,
+		gap = barGap,
 		padding = 0,
 	}, children)
 end
@@ -83,7 +82,7 @@ bar_delimiter = 59
 	end
 
 	local started = noctalia.runStream(string.format("cava -p %q 2>&1", configPath), function(line: string)
-		local configuredBars = math.clamp(tonumber(noctalia.getConfig("bars")) or 48, 8, 256)
+		local configuredBars = math.clamp(tonumber(noctalia.getConfig("bars")) or 160, 8, 256)
 		if configuredBars ~= currentBarsCount then
 			currentBarsCount = configuredBars
 			bars = table.create(currentBarsCount, 0)
