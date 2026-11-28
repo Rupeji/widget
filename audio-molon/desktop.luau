@@ -1,15 +1,17 @@
 --!strict
 
 -- ── Configuración base ───────────────────────────────────────────────────────
-local CAVA_BANDS = 64 -- CAVA captura 64 bandas para interpolar cualquier ancho con suavidad
+local CAVA_BANDS = 64
+local cfgWidth = tonumber(noctalia.getConfig("widget_width")) or 600
+local cfgHeight = tonumber(noctalia.getConfig("max_height")) or 140
 local sensitivity = tonumber(noctalia.getConfig("sensitivity")) or 100
 local barColor = tostring(noctalia.getConfig("color") or "primary")
 local MIN_HEIGHT = 4
 
 -- ── Estado interno ───────────────────────────────────────────────────────────
 local rawBands: { number } = table.create(CAVA_BANDS, 0)
-local widgetWidth: number = tonumber(noctalia.getConfig("bars") and (noctalia.getConfig("bars") * 12)) or 300
-local widgetHeight: number = tonumber(noctalia.getConfig("max_height")) or 120
+local dynamicW: number? = nil
+local dynamicH: number? = nil
 
 -- Interpola las 64 bandas de CAVA a cualquier número de barras visibles
 local function sampleBand(index: number, totalVisible: number): number
@@ -27,15 +29,19 @@ local function sampleBand(index: number, totalVisible: number): number
 end
 
 local function buildUi(): UiNode
-	local usableW = math.max(40, widgetWidth - 16)
-	local usableH = math.max(24, widgetHeight - 16)
+	-- Intentamos leer propiedades dinámicas por si la API 36 las expone
+	local dw = dynamicW or (type(desktopWidget.width) == "number" and desktopWidget.width > 20 and desktopWidget.width) or cfgWidth
+	local dh = dynamicH or (type(desktopWidget.height) == "number" and desktopWidget.height > 20 and desktopWidget.height) or cfgHeight
+
+	local usableW = math.max(40, dw - 16)
+	local usableH = math.max(24, dh - 16)
 
 	-- 1. El ALTO determina el grosor y separación proporcional de las barras
 	local barWidth = math.clamp(math.floor(usableH / 16), 4, 24)
 	local barGap = math.max(2, math.floor(barWidth * 0.5))
-	local barRadius = math.floor(barWidth / 2) -- Puntas totalmente redondeadas tipo cápsula
+	local barRadius = math.floor(barWidth / 2)
 
-	-- 2. El ANCHO determina cuántas barras caben para rellenar el 100% sin deformarse
+	-- 2. El ANCHO determina cuántas barras caben para rellenar el 100%
 	local visibleBars = math.max(4, math.floor((usableW + barGap) / (barWidth + barGap)))
 
 	local children: { UiNode } = {}
@@ -60,13 +66,17 @@ local function buildUi(): UiNode
 	}, children)
 end
 
--- Se ejecuta automáticamente al estirar o encoger el widget en el escritorio
+-- Hooks posibles de redimensionado en Noctalia
 function onResize(w: number, h: number)
 	if w > 0 and h > 0 then
-		widgetWidth = w
-		widgetHeight = h
+		dynamicW = w
+		dynamicH = h
 		desktopWidget.render(buildUi())
 	end
+end
+
+function onSizeChanged(w: number, h: number)
+	onResize(w, h)
 end
 
 -- Render inicial
