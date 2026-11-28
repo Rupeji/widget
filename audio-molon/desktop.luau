@@ -7,6 +7,7 @@ local MIN_HEIGHT = 4
 local numBars = tonumber(noctalia.getConfig("bars")) or 24
 local bars: { number } = table.create(numBars, 0)
 local cavaRunning = false
+local receivedFirstLine = false
 
 local function getConfigPath(): string?
 	local dataDir, err = noctalia.pluginDataDir()
@@ -17,19 +18,9 @@ local function getConfigPath(): string?
 	return dataDir .. "/cava.conf"
 end
 
-local function stopCava()
-	if cavaRunning then
-		noctalia.runAsync({ "pkill", "-f", "audio-molon/cava.conf" })
-		cavaRunning = false
-	end
-end
-
 local function buildCavaConfig(): string
 	local count = tonumber(noctalia.getConfig("bars")) or 24
 	local sens = tonumber(noctalia.getConfig("sensitivity")) or 100
-	local gravity = tonumber(noctalia.getConfig("gravity")) or 200
-	local monstercatCfg = noctalia.getConfig("monstercat")
-	local monstercat = (monstercatCfg == nil or monstercatCfg == true) and 1 or 0
 
 	return string.format([[
 [general]
@@ -44,11 +35,7 @@ raw_target = /dev/stdout
 data_format = ascii
 ascii_max_range = 1000
 bar_delimiter = 59
-
-[smoothing]
-monstercat = %d
-gravity = %d
-]], count, sens, monstercat, gravity)
+]], count, sens)
 end
 
 local function buildUi(): UiNode
@@ -82,9 +69,13 @@ end
 
 local function onCavaLine(line: string)
 	if not string.match(line, "^%d+;") then
+		if not receivedFirstLine and line ~= "" then
+			noctalia.notifyError("Audio Molon (CAVA)", line)
+		end
 		return
 	end
 
+	receivedFirstLine = true
 	local idx = 1
 	local changed = false
 
@@ -109,8 +100,7 @@ local function onCavaLine(line: string)
 end
 
 local function startCava()
-	stopCava()
-
+	receivedFirstLine = false
 	numBars = tonumber(noctalia.getConfig("bars")) or 24
 	bars = table.create(numBars, 0)
 	desktopWidget.render(buildUi())
@@ -135,14 +125,12 @@ local function startCava()
 	cavaRunning = noctalia.runStream(cmd, onCavaLine)
 end
 
--- Se ejecuta si cambias los ajustes en Noctalia
-function onConfigChanged()
-	startCava()
-end
-
--- Limpieza al cerrar, desactivar o recargar el widget
+-- Limpieza solo al cerrar o recargar el widget
 function onExit(signal: number, reason: string)
-	stopCava()
+	if cavaRunning then
+		noctalia.runAsync({ "pkill", "-f", "audio-molon/cava.conf" })
+		cavaRunning = false
+	end
 end
 
 -- Inicio inmediato al cargar el widget
