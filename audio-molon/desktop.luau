@@ -1,26 +1,17 @@
 --!strict
 
--- ── Configuración base ───────────────────────────────────────────────────────
+-- ── Configuración base desde ajustes ─────────────────────────────────────────
 local CAVA_BANDS = 64
-local widgetWidth = math.max(120, tonumber(noctalia.getConfig("widget_width")) or 600)
-local maxHeight = math.max(30, tonumber(noctalia.getConfig("max_height")) or 140)
+local cfgWidth = math.max(120, tonumber(noctalia.getConfig("widget_width")) or 600)
+local cfgHeight = math.max(30, tonumber(noctalia.getConfig("max_height")) or 140)
 local sensitivity = tonumber(noctalia.getConfig("sensitivity")) or 100
 local barColor = tostring(noctalia.getConfig("color") or "primary")
 local MIN_HEIGHT = 4
 
-local usableW = widgetWidth
-local usableH = maxHeight
-
--- 1. La ALTURA determina el grosor y separación proporcional de las barras
-local barWidth = math.clamp(math.floor(usableH / 16), 3, 24)
-local barGap = math.max(2, math.floor(barWidth * 0.5))
-local barRadius = math.floor(barWidth / 2)
-
--- 2. El ANCHO (widget_width) determina cuántas barras caben para cubrirlo de punta a punta
-local visibleBars = math.max(4, math.floor((usableW + barGap) / (barWidth + barGap)))
-
 -- ── Estado interno ───────────────────────────────────────────────────────────
 local rawBands: { number } = table.create(CAVA_BANDS, 0)
+local currentW: number = cfgWidth
+local currentH: number = cfgHeight
 
 -- Interpola las 64 bandas de CAVA a cualquier cantidad de barras visibles
 local function sampleBand(index: number, totalVisible: number): number
@@ -38,6 +29,17 @@ local function sampleBand(index: number, totalVisible: number): number
 end
 
 local function buildUi(): UiNode
+	local usableW = math.max(40, currentW)
+	local usableH = math.max(24, currentH)
+
+	-- 1. La ALTURA determina el grosor y separación proporcional de las barras
+	local barWidth = math.clamp(math.floor(usableH / 16), 3, 32)
+	local barGap = math.max(2, math.floor(barWidth * 0.5))
+	local barRadius = math.floor(barWidth / 2)
+
+	-- 2. El ANCHO determina cuántas barras caben para cubrirlo de punta a punta
+	local visibleBars = math.max(4, math.floor((usableW + barGap) / (barWidth + barGap)))
+
 	local children: { UiNode } = {}
 	for i = 1, visibleBars do
 		local val = sampleBand(i, visibleBars)
@@ -52,12 +54,29 @@ local function buildUi(): UiNode
 	end
 
 	return ui.row({
-		height = maxHeight,
+		height = usableH,
 		gap = barGap,
 		justify = "center",
 		align = "end",
-		padding = 0, -- Sin margen inferior para que toque el borde del widget
+		padding = 0,
 	}, children)
+end
+
+-- Recuperamos los hooks de redimensionado para que al estirar el alto engorden las barras
+function onResize(w: number, h: number)
+	if w and h and w > 20 and h > 20 then
+		currentW = w
+		currentH = h
+		desktopWidget.render(buildUi())
+	end
+end
+
+function onSizeChanged(w: number, h: number)
+	onResize(w, h)
+end
+
+function onGeometryChanged(x: number, y: number, w: number, h: number)
+	onResize(w, h)
 end
 
 -- Render inicial
