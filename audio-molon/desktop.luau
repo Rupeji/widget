@@ -2,18 +2,27 @@
 
 -- ── Configuración base ───────────────────────────────────────────────────────
 local CAVA_BANDS = 64
-local cfgWidth = tonumber(noctalia.getConfig("widget_width")) or 600
-local cfgHeight = tonumber(noctalia.getConfig("max_height")) or 140
+local widgetWidth = math.max(120, tonumber(noctalia.getConfig("widget_width")) or 600)
+local maxHeight = math.max(30, tonumber(noctalia.getConfig("max_height")) or 140)
 local sensitivity = tonumber(noctalia.getConfig("sensitivity")) or 100
 local barColor = tostring(noctalia.getConfig("color") or "primary")
 local MIN_HEIGHT = 4
 
+local usableW = widgetWidth - 16
+local usableH = maxHeight - 16
+
+-- 1. La ALTURA determina el grosor y separación proporcional de las barras
+local barWidth = math.clamp(math.floor(usableH / 16), 3, 24)
+local barGap = math.max(2, math.floor(barWidth * 0.5))
+local barRadius = math.floor(barWidth / 2)
+
+-- 2. El ANCHO (widget_width) determina cuántas barras caben para cubrirlo de punta a punta
+local visibleBars = math.max(4, math.floor((usableW + barGap) / (barWidth + barGap)))
+
 -- ── Estado interno ───────────────────────────────────────────────────────────
 local rawBands: { number } = table.create(CAVA_BANDS, 0)
-local hookW: number? = nil
-local hookH: number? = nil
 
--- Interpola las 64 bandas de CAVA a cualquier número de barras visibles
+-- Interpola las 64 bandas de CAVA a cualquier cantidad de barras visibles
 local function sampleBand(index: number, totalVisible: number): number
 	if totalVisible <= 1 then
 		return rawBands[1] or 0
@@ -29,25 +38,6 @@ local function sampleBand(index: number, totalVisible: number): number
 end
 
 local function buildUi(): UiNode
-	-- Leemos el tamaño actual del contenedor si Noctalia lo expone en desktopWidget
-	local dw = hookW
-		or (type(desktopWidget.width) == "number" and desktopWidget.width > 20 and desktopWidget.width)
-		or cfgWidth
-	local dh = hookH
-		or (type(desktopWidget.height) == "number" and desktopWidget.height > 20 and desktopWidget.height)
-		or cfgHeight
-
-	local usableW = math.max(40, dw - 16)
-	local usableH = math.max(24, dh - 16)
-
-	-- 1. El ALTO determina el grosor y separación proporcional de las barras
-	local barWidth = math.clamp(math.floor(usableH / 16), 4, 24)
-	local barGap = math.max(2, math.floor(barWidth * 0.5))
-	local barRadius = math.floor(barWidth / 2)
-
-	-- 2. El ANCHO determina cuántas barras caben para rellenar el 100%
-	local visibleBars = math.max(4, math.floor((usableW + barGap) / (barWidth + barGap)))
-
 	local children: { UiNode } = {}
 	for i = 1, visibleBars do
 		local val = sampleBand(i, visibleBars)
@@ -68,23 +58,6 @@ local function buildUi(): UiNode
 		align = "end",
 		padding = 8,
 	}, children)
-end
-
--- Captura cualquier variante de evento de redimensionado que emita Noctalia
-function onResize(w: number, h: number)
-	if w and h and w > 20 and h > 20 then
-		hookW = w
-		hookH = h
-		desktopWidget.render(buildUi())
-	end
-end
-
-function onSizeChanged(w: number, h: number)
-	onResize(w, h)
-end
-
-function onGeometryChanged(x: number, y: number, w: number, h: number)
-	onResize(w, h)
 end
 
 -- Render inicial
