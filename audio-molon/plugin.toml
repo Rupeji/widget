@@ -4,7 +4,7 @@ version = "1.0.0"
 author = "rupeji"
 license = "MIT"
 description = "Visualizador de espectro de audio en el escritorio impulsado por CAVA"
-plugin_api = 59
+plugin_api = 36
 
 [[service]]
 entry = "service.luau"
