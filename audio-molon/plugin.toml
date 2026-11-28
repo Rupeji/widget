@@ -1,9 +1,51 @@
-id = "audio-molon"
-name = "audio-molon"
+id = "rupeji/audio-molon"
+name = "Audio Molon"
 version = "1.0.0"
+author = "rupeji"
+license = "MIT"
 description = "Visualizador de espectro de audio en el escritorio impulsado por CAVA"
+plugin_api = 59
+
+[[service]]
+entry = "service.luau"
 
 [[desktop_widget]]
 id = "audio-molon"
-name = "audio-molon"
+name = "Audio Molon"
 entry = "desktop.luau"
+
+[[setting]]
+key = "bars"
+type = "number"
+label = "Número de barras"
+default = 24
+min = 8
+max = 64
+
+[[setting]]
+key = "sensitivity"
+type = "number"
+label = "Sensibilidad (%)"
+default = 100
+min = 10
+max = 500
+
+[[setting]]
+key = "gravity"
+type = "number"
+label = "Gravedad (caída)"
+default = 200
+min = 50
+max = 1000
+
+[[setting]]
+key = "monstercat"
+type = "boolean"
+label = "Filtro Monstercat"
+default = true
+
+[[setting]]
+key = "color"
+type = "string"
+label = "Color (primary, secondary o #RRGGBB)"
+default = "primary"
