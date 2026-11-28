@@ -17,7 +17,7 @@ entry = "desktop.luau"
 [[setting]]
 key = "bars"
 type = "number"
-label = "Número de barras"
+label_key = "setting_bars"
 default = 24
 min = 8
 max = 64
@@ -25,7 +25,7 @@ max = 64
 [[setting]]
 key = "bar_width"
 type = "number"
-label = "Ancho de barra (px)"
+label_key = "setting_bar_width"
 default = 8
 min = 2
 max = 40
@@ -33,7 +33,7 @@ max = 40
 [[setting]]
 key = "bar_gap"
 type = "number"
-label = "Separación entre barras (px)"
+label_key = "setting_bar_gap"
 default = 4
 min = 0
 max = 24
@@ -41,7 +41,7 @@ max = 24
 [[setting]]
 key = "max_height"
 type = "number"
-label = "Altura máxima (px)"
+label_key = "setting_max_height"
 default = 120
 min = 30
 max = 500
@@ -49,7 +49,7 @@ max = 500
 [[setting]]
 key = "sensitivity"
 type = "number"
-label = "Sensibilidad (%)"
+label_key = "setting_sensitivity"
 default = 100
 min = 10
 max = 500
@@ -57,7 +57,7 @@ max = 500
 [[setting]]
 key = "gravity"
 type = "number"
-label = "Gravedad (caída)"
+label_key = "setting_gravity"
 default = 200
 min = 50
 max = 1000
@@ -65,11 +65,11 @@ max = 1000
 [[setting]]
 key = "monstercat"
 type = "boolean"
-label = "Filtro Monstercat"
+label_key = "setting_monstercat"
 default = true
 
 [[setting]]
 key = "color"
 type = "string"
-label = "Color (primary, secondary o #RRGGBB)"
+label_key = "setting_color"
 default = "primary"
