@@ -1,29 +1,26 @@
 --!strict
 
--- ── Configuración base ───────────────────────────────────────────────────────
-local numBars = math.clamp(tonumber(noctalia.getConfig("bars")) or 48, 8, 160)
-local barGap = math.clamp(tonumber(noctalia.getConfig("bar_gap")) or 4, 1, 20)
-local sensitivity = tonumber(noctalia.getConfig("sensitivity")) or 100
-local barColor = tostring(noctalia.getConfig("color") or "primary")
-local hideWhenIdleCfg = noctalia.getConfig("hide_when_idle")
-local hideWhenIdle = (hideWhenIdleCfg == nil or hideWhenIdleCfg == true)
-
+-- ── Constantes ───────────────────────────────────────────────────────────────
 local SILENCE_FRAMES_THRESHOLD = 45 -- ~0.75 segundos a 60 FPS
 
 -- ── Estado interno ───────────────────────────────────────────────────────────
-local bars: { number } = table.create(numBars, 0)
+local currentBarsCount = math.clamp(tonumber(noctalia.getConfig("bars")) or 48, 8, 160)
+local bars: { number } = table.create(currentBarsCount, 0)
 local silentFrames = 0
 local isVisible = true
+local configPath: string? = nil
 
 local function buildUi(): UiNode
+	local barGap = math.clamp(tonumber(noctalia.getConfig("bar_gap")) or 4, 1, 20)
+	local barColor = tostring(noctalia.getConfig("color") or "primary")
 	local children: { UiNode } = {}
 
-	for i = 1, numBars do
+	for i = 1, currentBarsCount do
 		local val = bars[i] or 0
-		-- Cada barra es una columna flexible que llena el 100% del alto y ancho del rectángulo
 		table.insert(children, ui.column({
 			key = "col_" .. tostring(i),
 			flexGrow = 1,
+			minWidth = 2, -- Garantiza que NUNCA colapsen ni desaparezcan al poner muchas barras
 		}, {
 			ui.spacer({
 				flexGrow = math.max(0.001, 1 - val),
@@ -54,8 +51,15 @@ if not dataDir then
 	return
 end
 
-local configPath = dataDir .. "/cava.conf"
-local cfg = string.format([[
+configPath = dataDir .. "/cava.conf"
+
+local function startCava(numBars: number)
+	if not configPath then
+		return
+	end
+
+	local sensitivity = tonumber(noctalia.getConfig("sensitivity")) or 100
+	local cfg = string.format([[
 [general]
 framerate = 60
 bars = %d
@@ -70,52 +74,70 @@ ascii_max_range = 1000
 bar_delimiter = 59
 ]], numBars, sensitivity)
 
-local ok, writeErr = noctalia.writeFile(configPath, cfg)
-if not ok then
-	noctalia.notifyError("Audio Molon", "Error writeFile: " .. tostring(writeErr))
-	return
-end
-
-local started = noctalia.runStream(string.format("cava -p %q 2>&1", configPath), function(line: string)
-	if string.match(line, "^%d+;") then
-		local idx = 1
-		local hasAudio = false
-
-		for valStr in string.gmatch(line, "([^;]+)") do
-			if idx <= numBars then
-				local val = math.clamp((tonumber(valStr) or 0) / 1000, 0, 1)
-				bars[idx] = val
-				if val > 0.005 then
-					hasAudio = true
-				end
-				idx += 1
-			end
-		end
-
-		-- Control de visibilidad automática al pausar o haber silencio
-		if hideWhenIdle then
-			if hasAudio then
-				silentFrames = 0
-				if not isVisible then
-					isVisible = true
-					desktopWidget.setVisible(true)
-				end
-			else
-				silentFrames += 1
-				if silentFrames >= SILENCE_FRAMES_THRESHOLD and isVisible then
-					isVisible = false
-					desktopWidget.setVisible(false)
-					return
-				end
-			end
-		end
-
-		if isVisible then
-			desktopWidget.render(buildUi())
-		end
+	local ok, writeErr = noctalia.writeFile(configPath, cfg)
+	if not ok then
+		noctalia.notifyError("Audio Molon", "Error writeFile: " .. tostring(writeErr))
+		return
 	end
-end)
 
-if not started then
-	noctalia.notifyError("Audio Molon", "No se pudo arrancar cava")
+	local started = noctalia.runStream(string.format("cava -p %q 2>&1", configPath), function(line: string)
+		-- Si el usuario cambió el número de barras en el menú, reiniciamos cava con el nuevo valor
+		local configuredBars = math.clamp(tonumber(noctalia.getConfig("bars")) or 48, 8, 160)
+		if configuredBars ~= currentBarsCount then
+			currentBarsCount = configuredBars
+			bars = table.create(currentBarsCount, 0)
+			noctalia.runAsync({ "pkill", "-f", "audio-molon/cava.conf" })
+			startCava(currentBarsCount)
+			return
+		end
+
+		if string.match(line, "^%d+;") then
+			local idx = 1
+			local hasAudio = false
+
+			for valStr in string.gmatch(line, "([^;]+)") do
+				if idx <= currentBarsCount then
+					local val = math.clamp((tonumber(valStr) or 0) / 1000, 0, 1)
+					bars[idx] = val
+					if val > 0.005 then
+						hasAudio = true
+					end
+					idx += 1
+				end
+			end
+
+			local hideWhenIdleCfg = noctalia.getConfig("hide_when_idle")
+			local hideWhenIdle = (hideWhenIdleCfg == nil or hideWhenIdleCfg == true)
+
+			if hideWhenIdle then
+				if hasAudio then
+					silentFrames = 0
+					if not isVisible then
+						isVisible = true
+						desktopWidget.setVisible(true)
+					end
+				else
+					silentFrames += 1
+					if silentFrames >= SILENCE_FRAMES_THRESHOLD and isVisible then
+						isVisible = false
+						desktopWidget.setVisible(false)
+						return
+					end
+				end
+			elseif not isVisible then
+				isVisible = true
+				desktopWidget.setVisible(true)
+			end
+
+			if isVisible then
+				desktopWidget.render(buildUi())
+			end
+		end
+	end)
+
+	if not started then
+		noctalia.notifyError("Audio Molon", "No se pudo arrancar cava")
+	end
 end
+
+startCava(currentBarsCount)
