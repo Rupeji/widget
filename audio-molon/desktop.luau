@@ -3,6 +3,7 @@
 -- ── Constantes ───────────────────────────────────────────────────────────────
 local CAVA_BANDS = 64
 local SILENCE_FRAMES_THRESHOLD = 45 -- ~0.75 segundos a 60 FPS
+local MIN_BAR_HEIGHT = 4
 
 -- ── Estado interno ───────────────────────────────────────────────────────────
 local rawBands: { number } = table.create(CAVA_BANDS, 0)
@@ -14,7 +15,7 @@ local configPath: string? = nil
 -- Interpola las 64 bandas de CAVA a cualquier cantidad de barras visibles
 local function sampleBand(index: number, totalVisible: number): number
 	if totalVisible <= 1 then
-		return rawBands[1] or 0
+		return rawBands or 0
 	end
 	local pos = ((index - 1) / (totalVisible - 1)) * (CAVA_BANDS - 1) + 1
 	local lowIdx = math.floor(pos)
@@ -28,7 +29,11 @@ end
 
 local function buildUi(): UiNode
 	local totalWidth = math.max(200, tonumber(noctalia.getConfig("width")) or 1920)
-	local totalHeight = math.max(30, tonumber(noctalia.getConfig("height")) or 140)
+	local barMaxHeight = math.max(30, tonumber(noctalia.getConfig("bar_height")) or 180)
+	local canvasHeight = math.max(barMaxHeight, tonumber(noctalia.getConfig("canvas_height")) or 600)
+	local growUpwardsCfg = noctalia.getConfig("grow_upwards")
+	local growUpwards = (growUpwardsCfg == nil or growUpwardsCfg == true)
+
 	local barWidth = math.clamp(tonumber(noctalia.getConfig("bar_width")) or 6, 2, 40)
 	local barGap = math.clamp(tonumber(noctalia.getConfig("bar_gap")) or 3, 1, 20)
 	local barColor = tostring(noctalia.getConfig("color") or "primary")
@@ -40,25 +45,32 @@ local function buildUi(): UiNode
 	local children: { UiNode } = {}
 	for i = 1, visibleBars do
 		local val = sampleBand(i, visibleBars)
+		local currentBarH = math.floor(MIN_BAR_HEIGHT + (val * (barMaxHeight - MIN_BAR_HEIGHT)))
+
+		local barNode = ui.box({
+			key = "bar_" .. tostring(i),
+			height = currentBarH,
+			fill = barColor,
+			radius = barRadius,
+		})
+
+		local spacerNode = ui.spacer({
+			flexGrow = 1,
+		})
+
+		-- Si crece hacia arriba, el espaciador va arriba y la barra se ancla al borde inferior;
+		-- si crece hacia abajo, la barra se ancla arriba y el espaciador empuja desde abajo.
+		local colChildren = if growUpwards then { spacerNode, barNode } else { barNode, spacerNode }
+
 		table.insert(children, ui.column({
 			key = "col_" .. tostring(i),
 			flexGrow = 1,
-		}, {
-			ui.spacer({
-				flexGrow = math.max(0.001, 1 - val),
-			}),
-			ui.box({
-				key = "bar_" .. tostring(i),
-				flexGrow = math.max(0.015, val),
-				fill = barColor,
-				radius = barRadius,
-			}),
-		}))
+		}, colChildren))
 	end
 
 	return ui.row({
 		width = totalWidth,
-		height = totalHeight,
+		height = canvasHeight,
 		gap = barGap,
 		padding = 0,
 	}, children)
@@ -105,7 +117,6 @@ bar_delimiter = 59
 	end
 
 	local started = noctalia.runStream(string.format("cava -p %q 2>&1", configPath), function(line: string)
-		-- Reinicia cava solo si cambia la sensibilidad en los ajustes
 		local currentSens = tonumber(noctalia.getConfig("sensitivity")) or 100
 		if currentSens ~= lastSensitivity then
 			noctalia.runAsync({ "pkill", "-f", "audio-molon/cava.conf" })
