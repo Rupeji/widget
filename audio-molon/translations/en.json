@@ -1,4 +1,6 @@
 {
+  "setting_width": "Width (px)",
+  "setting_height": "Height (px)",
   "setting_bars": "Number of bars",
   "setting_bar_gap": "Bar gap (px)",
   "setting_sensitivity": "Sensitivity (%)",
