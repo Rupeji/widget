@@ -1,6 +1,7 @@
 --!strict
 
 local cavaRunning = false
+local receivedFirstLine = false
 
 local function getConfigPath(): string?
 	local dataDir, err = noctalia.pluginDataDir()
@@ -31,12 +32,18 @@ framerate = 60
 bars = %d
 sensitivity = %d
 
+[input]
+method = pipewire
+source = auto
+
 [output]
 method = raw
+channels = mono
 raw_target = /dev/stdout
 data_format = ascii
 ascii_max_range = 1000
 bar_delimiter = 59
+frame_delimiter = 10
 
 [smoothing]
 monstercat = %d
@@ -46,6 +53,7 @@ end
 
 local function startCava()
 	stopCava()
+	receivedFirstLine = false
 
 	if not noctalia.commandExists("cava") then
 		noctalia.notifyError("Audio Molon", "No se encontró 'cava' instalado en el sistema.")
@@ -59,30 +67,40 @@ local function startCava()
 
 	local ok, writeErr = noctalia.writeFile(configPath, buildConfig())
 	if not ok then
-		noctalia.log("[audio-molon] Error escribiendo cava.conf: " .. tostring(writeErr))
+		noctalia.notifyError("Audio Molon", "Error escribiendo cava.conf: " .. tostring(writeErr))
 		return
 	end
 
-	-- Compartimos el número de barras actual con el desktop_widget
 	local numBars = tonumber(noctalia.getConfig("bars")) or 24
 	noctalia.state.set("bars_count", numBars)
 
-	local cmd = string.format("cava -p %q", configPath)
+	-- Redirigimos stderr a stdout (2>&1) para capturar cualquier error de cava en los logs
+	local cmd = string.format("cava -p %q 2>&1", configPath)
 	cavaRunning = noctalia.runStream(cmd, function(line: string)
-		-- Enviamos la línea cruda por state para evitar crear tablas cada 16ms
-		noctalia.state.set("cava_line", line)
+		if not receivedFirstLine then
+			receivedFirstLine = true
+			noctalia.log("[audio-molon] Primera línea de CAVA: " .. line)
+		end
+
+		-- Si la línea empieza por un número, es un frame de audio válido; si no, es un error de CAVA
+		if string.match(line, "^%d+;") then
+			noctalia.state.set("cava_line", line)
+		else
+			noctalia.log("[audio-molon] CAVA output: " .. line)
+		end
 	end)
+
+	if not cavaRunning then
+		noctalia.notifyError("Audio Molon", "No se pudo iniciar el proceso CAVA.")
+	end
 end
 
--- Se ejecuta automáticamente cuando cambias los ajustes en Noctalia
 function onConfigChanged()
 	startCava()
 end
 
--- Se ejecuta al recargar, desactivar o cerrar Noctalia
 function onExit(signal: number, reason: string)
 	stopCava()
 end
 
--- Arranque inicial del servicio
 startCava()
