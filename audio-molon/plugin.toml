@@ -6,9 +6,6 @@ license = "MIT"
 description = "Visualizador de espectro de audio en el escritorio impulsado por CAVA"
 plugin_api = 36
 
-[[service]]
-entry = "service.luau"
-
 [[desktop_widget]]
 id = "audio-molon"
 name = "Audio Molon"
