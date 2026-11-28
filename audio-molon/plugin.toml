@@ -20,12 +20,26 @@ min = 200
 max = 7680
 
 [[setting]]
-key = "height"
+key = "bar_height"
 type = "number"
-label_key = "setting_height"
-default = 140
+label_key = "setting_bar_height"
+default = 180
 min = 30
 max = 800
+
+[[setting]]
+key = "canvas_height"
+type = "number"
+label_key = "setting_canvas_height"
+default = 600
+min = 100
+max = 1080
+
+[[setting]]
+key = "grow_upwards"
+type = "boolean"
+label_key = "setting_grow_upwards"
+default = true
 
 [[setting]]
 key = "bar_width"
