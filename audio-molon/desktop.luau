@@ -8,8 +8,8 @@ local sensitivity = tonumber(noctalia.getConfig("sensitivity")) or 100
 local barColor = tostring(noctalia.getConfig("color") or "primary")
 local MIN_HEIGHT = 4
 
-local usableW = widgetWidth - 16
-local usableH = maxHeight - 16
+local usableW = widgetWidth
+local usableH = maxHeight
 
 -- 1. La ALTURA determina el grosor y separación proporcional de las barras
 local barWidth = math.clamp(math.floor(usableH / 16), 3, 24)
@@ -25,7 +25,7 @@ local rawBands: { number } = table.create(CAVA_BANDS, 0)
 -- Interpola las 64 bandas de CAVA a cualquier cantidad de barras visibles
 local function sampleBand(index: number, totalVisible: number): number
 	if totalVisible <= 1 then
-		return rawBands[1] or 0
+		return rawBands or 0
 	end
 	local pos = ((index - 1) / (totalVisible - 1)) * (CAVA_BANDS - 1) + 1
 	local lowIdx = math.floor(pos)
@@ -52,11 +52,11 @@ local function buildUi(): UiNode
 	end
 
 	return ui.row({
-		height = usableH,
+		height = maxHeight,
 		gap = barGap,
 		justify = "center",
 		align = "end",
-		padding = 8,
+		padding = 0, -- Sin margen inferior para que toque el borde del widget
 	}, children)
 end
 
