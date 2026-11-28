@@ -2,24 +2,40 @@
 
 -- Leemos la configuración UNA sola vez al arrancar
 local numBars = tonumber(noctalia.getConfig("bars")) or 24
-local barWidth = tonumber(noctalia.getConfig("bar_width")) or 8
+local defaultBarWidth = tonumber(noctalia.getConfig("bar_width")) or 8
 local barGap = tonumber(noctalia.getConfig("bar_gap")) or 4
-local maxHeight = tonumber(noctalia.getConfig("max_height")) or 120
+local defaultMaxHeight = tonumber(noctalia.getConfig("max_height")) or 120
 local sensitivity = tonumber(noctalia.getConfig("sensitivity")) or 100
 local barColor = tostring(noctalia.getConfig("color") or "primary")
-local barRadius = math.min(4, math.floor(barWidth / 2))
 local MIN_HEIGHT = 4
 
 local bars: { number } = table.create(numBars, 0)
+local widgetWidth: number? = nil
+local widgetHeight: number? = nil
 
 local function buildUi(): UiNode
+	-- Calculamos el ancho de cada barra según el ancho del widget (si se redimensionó)
+	local currentBarWidth = defaultBarWidth
+	if widgetWidth and widgetWidth > 32 then
+		local usableWidth = widgetWidth - 16 - (barGap * (numBars - 1))
+		currentBarWidth = math.max(2, math.floor(usableWidth / numBars))
+	end
+
+	-- Calculamos la altura máxima según la altura del widget (si se redimensionó)
+	local currentMaxHeight = defaultMaxHeight
+	if widgetHeight and widgetHeight > 24 then
+		currentMaxHeight = widgetHeight - 16
+	end
+
+	local barRadius = math.min(4, math.floor(currentBarWidth / 2))
+
 	local children: { UiNode } = {}
 	for i = 1, numBars do
 		local val = bars[i] or 0
-		local h = math.floor(MIN_HEIGHT + (val * math.max(0, maxHeight - MIN_HEIGHT)))
+		local h = math.floor(MIN_HEIGHT + (val * math.max(0, currentMaxHeight - MIN_HEIGHT)))
 		table.insert(children, ui.box({
 			key = "bar_" .. tostring(i),
-			flex = 1, -- Hace que cada barra se reparta el ancho total del widget
+			width = currentBarWidth, -- Siempre tiene un ancho numérico válido (> 0)
 			height = h,
 			fill = barColor,
 			radius = barRadius,
@@ -27,11 +43,18 @@ local function buildUi(): UiNode
 	end
 
 	return ui.row({
-		height = maxHeight,
+		height = currentMaxHeight,
 		gap = barGap,
 		align = "end",
 		padding = 8,
 	}, children)
+end
+
+-- Se dispara si Noctalia notifica cambio de tamaño del widget en el escritorio
+function onResize(w: number, h: number)
+	widgetWidth = w
+	widgetHeight = h
+	desktopWidget.render(buildUi())
 end
 
 -- Render inicial
