@@ -1,59 +1,46 @@
 --!strict
 
 -- ── Configuración base ───────────────────────────────────────────────────────
-local CAVA_BANDS = 64
+local numBars = math.clamp(tonumber(noctalia.getConfig("bars")) or 48, 8, 160)
+local barGap = math.clamp(tonumber(noctalia.getConfig("bar_gap")) or 4, 1, 20)
 local sensitivity = tonumber(noctalia.getConfig("sensitivity")) or 100
-local MIN_HEIGHT = 4
+local barColor = tostring(noctalia.getConfig("color") or "primary")
+local hideWhenIdleCfg = noctalia.getConfig("hide_when_idle")
+local hideWhenIdle = (hideWhenIdleCfg == nil or hideWhenIdleCfg == true)
+
+local SILENCE_FRAMES_THRESHOLD = 45 -- ~0.75 segundos a 60 FPS
 
 -- ── Estado interno ───────────────────────────────────────────────────────────
-local rawBands: { number } = table.create(CAVA_BANDS, 0)
-
--- Interpola las 64 bandas de CAVA a cualquier cantidad de barras visibles
-local function sampleBand(index: number, totalVisible: number): number
-	if totalVisible <= 1 then
-		return rawBands[1] or 0
-	end
-	local pos = ((index - 1) / (totalVisible - 1)) * (CAVA_BANDS - 1) + 1
-	local lowIdx = math.floor(pos)
-	local highIdx = math.min(CAVA_BANDS, lowIdx + 1)
-	local frac = pos - lowIdx
-
-	local v1 = rawBands[lowIdx] or 0
-	local v2 = rawBands[highIdx] or 0
-	return v1 + (v2 - v1) * frac
-end
+local bars: { number } = table.create(numBars, 0)
+local silentFrames = 0
+local isVisible = true
 
 local function buildUi(): UiNode
-	local currentW = math.max(120, tonumber(noctalia.getConfig("widget_width")) or 600)
-	local currentH = math.max(30, tonumber(noctalia.getConfig("max_height")) or 140)
-	local barColor = tostring(noctalia.getConfig("color") or "primary")
-
-	-- 1. La ALTURA (Max height) determina el grosor y separación de las barras
-	local barWidth = math.clamp(math.floor(currentH / 16), 3, 32)
-	local barGap = math.max(2, math.floor(barWidth * 0.5))
-	local barRadius = math.floor(barWidth / 2)
-
-	-- 2. El ANCHO (Total width) determina cuántas barras caben para cubrirlo
-	local visibleBars = math.max(4, math.floor((currentW + barGap) / (barWidth + barGap)))
-
 	local children: { UiNode } = {}
-	for i = 1, visibleBars do
-		local val = sampleBand(i, visibleBars)
-		local barH = math.floor(MIN_HEIGHT + (val * math.max(0, currentH - MIN_HEIGHT)))
-		table.insert(children, ui.box({
-			key = "bar_" .. tostring(i),
-			width = barWidth,
-			height = barH,
-			fill = barColor,
-			radius = barRadius,
+
+	for i = 1, numBars do
+		local val = bars[i] or 0
+		-- Cada barra es una columna flexible que llena el 100% del alto y ancho del rectángulo
+		table.insert(children, ui.column({
+			key = "col_" .. tostring(i),
+			flexGrow = 1,
+		}, {
+			ui.spacer({
+				flexGrow = math.max(0.001, 1 - val),
+			}),
+			ui.box({
+				key = "bar_" .. tostring(i),
+				flexGrow = math.max(0.015, val),
+				fill = barColor,
+				radius = 4,
+			}),
 		}))
 	end
 
 	return ui.row({
-		height = currentH,
+		minWidth = 320,
+		minHeight = 80,
 		gap = barGap,
-		justify = "center",
-		align = "end",
 		padding = 0,
 	}, children)
 end
@@ -81,7 +68,7 @@ raw_target = /dev/stdout
 data_format = ascii
 ascii_max_range = 1000
 bar_delimiter = 59
-]], CAVA_BANDS, sensitivity)
+]], numBars, sensitivity)
 
 local ok, writeErr = noctalia.writeFile(configPath, cfg)
 if not ok then
@@ -92,13 +79,40 @@ end
 local started = noctalia.runStream(string.format("cava -p %q 2>&1", configPath), function(line: string)
 	if string.match(line, "^%d+;") then
 		local idx = 1
+		local hasAudio = false
+
 		for valStr in string.gmatch(line, "([^;]+)") do
-			if idx <= CAVA_BANDS then
-				rawBands[idx] = math.clamp((tonumber(valStr) or 0) / 1000, 0, 1)
+			if idx <= numBars then
+				local val = math.clamp((tonumber(valStr) or 0) / 1000, 0, 1)
+				bars[idx] = val
+				if val > 0.005 then
+					hasAudio = true
+				end
 				idx += 1
 			end
 		end
-		desktopWidget.render(buildUi())
+
+		-- Control de visibilidad automática al pausar o haber silencio
+		if hideWhenIdle then
+			if hasAudio then
+				silentFrames = 0
+				if not isVisible then
+					isVisible = true
+					desktopWidget.setVisible(true)
+				end
+			else
+				silentFrames += 1
+				if silentFrames >= SILENCE_FRAMES_THRESHOLD and isVisible then
+					isVisible = false
+					desktopWidget.setVisible(false)
+					return
+				end
+			end
+		end
+
+		if isVisible then
+			desktopWidget.render(buildUi())
+		end
 	end
 end)
 
