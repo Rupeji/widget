@@ -1,22 +1,17 @@
 --!strict
 
--- ── Configuración base desde ajustes ─────────────────────────────────────────
+-- ── Configuración base ───────────────────────────────────────────────────────
 local CAVA_BANDS = 64
-local cfgWidth = math.max(120, tonumber(noctalia.getConfig("widget_width")) or 600)
-local cfgHeight = math.max(30, tonumber(noctalia.getConfig("max_height")) or 140)
 local sensitivity = tonumber(noctalia.getConfig("sensitivity")) or 100
-local barColor = tostring(noctalia.getConfig("color") or "primary")
 local MIN_HEIGHT = 4
 
 -- ── Estado interno ───────────────────────────────────────────────────────────
 local rawBands: { number } = table.create(CAVA_BANDS, 0)
-local currentW: number = cfgWidth
-local currentH: number = cfgHeight
 
 -- Interpola las 64 bandas de CAVA a cualquier cantidad de barras visibles
 local function sampleBand(index: number, totalVisible: number): number
 	if totalVisible <= 1 then
-		return rawBands or 0
+		return rawBands[1] or 0
 	end
 	local pos = ((index - 1) / (totalVisible - 1)) * (CAVA_BANDS - 1) + 1
 	local lowIdx = math.floor(pos)
@@ -29,21 +24,22 @@ local function sampleBand(index: number, totalVisible: number): number
 end
 
 local function buildUi(): UiNode
-	local usableW = math.max(40, currentW)
-	local usableH = math.max(24, currentH)
+	local currentW = math.max(120, tonumber(noctalia.getConfig("widget_width")) or 600)
+	local currentH = math.max(30, tonumber(noctalia.getConfig("max_height")) or 140)
+	local barColor = tostring(noctalia.getConfig("color") or "primary")
 
-	-- 1. La ALTURA determina el grosor y separación proporcional de las barras
-	local barWidth = math.clamp(math.floor(usableH / 16), 3, 32)
+	-- 1. La ALTURA (Max height) determina el grosor y separación de las barras
+	local barWidth = math.clamp(math.floor(currentH / 16), 3, 32)
 	local barGap = math.max(2, math.floor(barWidth * 0.5))
 	local barRadius = math.floor(barWidth / 2)
 
-	-- 2. El ANCHO determina cuántas barras caben para cubrirlo de punta a punta
-	local visibleBars = math.max(4, math.floor((usableW + barGap) / (barWidth + barGap)))
+	-- 2. El ANCHO (Total width) determina cuántas barras caben para cubrirlo
+	local visibleBars = math.max(4, math.floor((currentW + barGap) / (barWidth + barGap)))
 
 	local children: { UiNode } = {}
 	for i = 1, visibleBars do
 		local val = sampleBand(i, visibleBars)
-		local barH = math.floor(MIN_HEIGHT + (val * math.max(0, usableH - MIN_HEIGHT)))
+		local barH = math.floor(MIN_HEIGHT + (val * math.max(0, currentH - MIN_HEIGHT)))
 		table.insert(children, ui.box({
 			key = "bar_" .. tostring(i),
 			width = barWidth,
@@ -54,29 +50,12 @@ local function buildUi(): UiNode
 	end
 
 	return ui.row({
-		height = usableH,
+		height = currentH,
 		gap = barGap,
 		justify = "center",
 		align = "end",
 		padding = 0,
 	}, children)
-end
-
--- Recuperamos los hooks de redimensionado para que al estirar el alto engorden las barras
-function onResize(w: number, h: number)
-	if w and h and w > 20 and h > 20 then
-		currentW = w
-		currentH = h
-		desktopWidget.render(buildUi())
-	end
-end
-
-function onSizeChanged(w: number, h: number)
-	onResize(w, h)
-end
-
-function onGeometryChanged(x: number, y: number, w: number, h: number)
-	onResize(w, h)
 end
 
 -- Render inicial
