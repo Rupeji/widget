@@ -1,10 +1,7 @@
 {
   "setting_bars": "Number of bars",
-  "setting_bar_width": "Bar width (px)",
   "setting_bar_gap": "Bar gap (px)",
-  "setting_max_height": "Max height (px)",
   "setting_sensitivity": "Sensitivity (%)",
-  "setting_gravity": "Gravity (falloff)",
-  "setting_monstercat": "Monstercat filter",
-  "setting_color": "Color (primary, secondary or #RRGGBB)"
+  "setting_color": "Color (primary, secondary or #RRGGBB)",
+  "setting_hide_when_idle": "Hide when silent or paused"
 }
